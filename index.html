@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SCAR: Self-Supervised Continuous Action Representation Learning</title>
+  <meta name="description" content="Project page for SCAR, a self-supervised framework for learning transferable continuous latent actions across embodiments.">
+  <link rel="stylesheet" href="style.css?v=2026062128">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="SCAR home">
+      <span class="brand-title">
+        <span class="brand-accent">SCAR:</span>
+        <span class="brand-accent">S</span>elf-Supervised
+        <span class="brand-accent">C</span>ontinuous
+        <span class="brand-accent">A</span>ction
+        <span class="brand-accent">R</span>epresentation Learning
+      </span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="#abstract">Abstract</a>
+      <a href="#theory">Theory</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#bibtex">BibTeX</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">arXiv 2026 project page</p>
+        <h1 class="hero-title">
+          <span class="title-line">
+            <span class="title-accent">SCAR:</span>
+            <span class="title-accent">S</span>elf-Supervised
+          </span>
+          <span class="title-line">
+            <span class="title-accent">C</span>ontinuous
+            <span class="title-accent">A</span>ction
+          </span>
+          <span class="title-line">
+            <span class="title-accent">R</span>epresentation Learning
+          </span>
+        </h1>
+        <p class="subtitle">
+          Learning a unified latent action interface from visual transitions, so world models can transfer action structure across embodiments instead of overfitting to raw robot commands.
+        </p>
+
+        <div class="authors" aria-label="Authors">
+          <a href="#maintainer">Hongjia Liu</a><sup>1,2</sup>,
+          <span>Fan Feng</span><sup>1</sup>,
+          <span>Minghao Fu</span><sup>1</sup>,
+          <span>Xinyue Wang</span><sup>1</sup>,
+          <span>Haofei Lu</span><sup>2</sup>,
+          <span>Biwei Huang</span><sup>1</sup>
+        </div>
+        <div class="affiliations">
+          <span><sup>1</sup>University of California, San Diego</span>
+          <span><sup>2</sup>KTH Royal Institute of Technology</span>
+        </div>
+
+        <div class="actions" aria-label="Project links">
+          <a class="button primary" href="https://arxiv.org/abs/2605.16412" target="_blank" rel="noopener">Paper</a>
+          <a class="button" href="https://arxiv.org/pdf/2605.16412" target="_blank" rel="noopener">PDF</a>
+          <button class="button muted" type="button" disabled>Code Coming Soon</button>
+          <button class="button" type="button" data-copy-bibtex>Copy BibTeX</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section summary-strip" aria-label="Key ideas">
+      <div class="summary-item">
+        <span class="summary-kicker">Representation</span>
+        <strong>Action as controllable change</strong>
+        <p>The latent action is learned from observation transitions, not copied from embodiment-specific command vectors.</p>
+      </div>
+      <div class="summary-item">
+        <span class="summary-kicker">Regularization</span>
+        <strong>Compact and invariant</strong>
+        <p>KL limits visual shortcuts while GRL(Gradient Reversal Layer) suppresses embodiment-discriminative information.</p>
+      </div>
+      <div class="summary-item">
+        <span class="summary-kicker">Transfer</span>
+        <strong>Cross-embodiment world models</strong>
+        <p>Shared latent actions provide a stronger conditioning interface under low labeled target data.</p>
+      </div>
+    </section>
+
+    <section class="section two-column" id="abstract">
+      <div>
+        <p class="section-label">Abstract</p>
+        <h2>A latent action space for transferable world models</h2>
+      </div>
+      <div class="prose">
+        <p>
+          Embodied world models are usually conditioned on raw action commands, but those commands are tied to a particular body, controller, and calibration. SCAR treats action as a distinct factor of visual change. An inverse dynamics model infers stochastic latent actions from pairs of latent observations, while a forward dynamics model learns to predict future latent video dynamics conditioned on those actions.
+        </p>
+        <p>
+          To make the learned action space transferable, SCAR constrains the latent posterior toward a standard Gaussian prior and uses adversarial embodiment invariance to remove nuisance information. Experiments on Procgen and Robotwin show stronger low-data adaptation, better cross-task transfer, and reduced embodiment leakage compared with raw-action or unconstrained latent-action interfaces.
+        </p>
+      </div>
+    </section>
+
+    <section class="section theory" id="theory">
+      <div class="section-heading">
+        <p class="section-label">Theory Sketch</p>
+        <h2>Sufficient conditions for unified latent action recovery</h2>
+      </div>
+
+      <div class="theory-intro">
+        <p>
+          SCAR's theory starts from a structured data-generation view: an embodiment-invariant latent action \(u_t\) is realized as an embodiment-specific command \(a_t^e = h(u_t, e)\), which drives the transition \(s_{t+1}=F(s_t,a_t^e)\) and is observed through rendered frames \(x_t=R(s_t)\). Under injectivity assumptions on realization, dynamics, and rendering, the theory gives sufficient conditions under which visual transitions can recover a shared latent action interface rather than only robot-specific commands.
+        </p>
+      </div>
+
+      <div class="theory-statement">
+        <strong>Informal theorem.</strong>
+        If inverse dynamics recovers the realized raw action coordinate up to an invertible reparameterization and the recovered coordinate decomposes into a shared controllable component plus an embodiment-specific nuisance component, then a population-level adversarial invariance objective removes the nuisance component and recovers a unified latent action space up to a per-embodiment invertible bijection \(z=\Phi_e(u)\).
+      </div>
+
+      <div class="theory-grid">
+        <article class="theory-card">
+          <span>01</span>
+          <h3>Stage 1: inverse dynamics identifiability</h3>
+          <p>
+            Because the render map and forward dynamics are injective on the data support, an inverse dynamics model that globally optimizes transition prediction can recover the realized action up to a continuous invertible reparameterization \(\tilde{a}_t = \rho(a_t^e)\).
+          </p>
+        </article>
+        <article class="theory-card">
+          <span>02</span>
+          <h3>Stage 2: embodiment-invariant selection</h3>
+          <p>
+            The recovered coordinate may still contain embodiment bias. With an optimal embodiment classifier, the adversarial objective satisfies \(\min_\omega \mathcal{L}_{\mathrm{CE}}=H(e\mid z)=H(e)-I(e;z)\), so gradient reversal pushes the encoder toward \(z\perp\!\!\!\perp e\).
+          </p>
+        </article>
+        <article class="theory-card">
+          <span>03</span>
+          <h3>Geometry of nuisance removal</h3>
+          <p>
+            In the proof, embodiment cluster centers span a nuisance subspace \(V\). Invariance forces all embodiment centers to collapse after encoding, which implies \(\operatorname{row}(M) = V^{\perp}\) when the rank and dimension match.
+          </p>
+        </article>
+        <article class="theory-card">
+          <span>04</span>
+          <h3>Unified latent recovery</h3>
+          <p>
+            For each embodiment \(e\), the theorem defines \(\Phi_e(u):=f_2(\rho(h(u,e)))\). In the linear proof setting, \(f_2(\tilde a)=M\tilde a\), so this becomes \(M\rho h(\cdot,e)\). By invariance of domain, \(\Phi_e\) is a bijective coordinate chart on its image.
+          </p>
+        </article>
+        <article class="theory-card">
+          <span>05</span>
+          <h3>Cross-embodiment alignment</h3>
+          <p>
+            The theorem frames transfer between embodiments \(e_1\) and \(e_2\) through the alignment map \(T=\Phi_{e_2}\circ\Phi_{e_1}^{-1}\), with the common pushforward law \({\left(\Phi_e\right)}_{\#}p(u)=p(z)\). Recovering \(u\) from \(z\) still requires the embodiment ID \(e\).
+          </p>
+        </article>
+        <article class="theory-card">
+          <span>06</span>
+          <h3>Why KL and prediction remain necessary</h3>
+          <p>
+            The formal result explains what invariance selects under idealized conditions. In the model, forward prediction prevents trivial invariant collapse, while KL regularization limits unrestricted visual coding and makes the latent action harder to use as an appearance shortcut.
+          </p>
+        </article>
+      </div>
+
+      <p class="theory-note">
+        This is a sufficient-condition analysis under idealized structured-nuisance and non-collapsed prediction assumptions, not a claim that every trained model automatically obtains perfect zero-shot transfer. It clarifies the target of the learning objective: recover an action coordinate from visual change, remove embodiment-discriminative directions, and retain a compact transition-predictive interface for the world model.
+      </p>
+    </section>
+
+    <section class="section method" id="method">
+      <div class="section-heading">
+        <p class="section-label">Method</p>
+        <h2>Inverse-forward latent dynamics with anti-leakage constraints</h2>
+      </div>
+
+      <div class="method-layout">
+        <figure class="media-block">
+          <img src="assets/scar-method-user.png" alt="SCAR method diagram from the paper.">
+        </figure>
+        <div class="method-steps">
+          <div class="step">
+            <span>01</span>
+            <h3>Infer latent actions</h3>
+            <p>The IDM reads latent observation pairs and produces stochastic latent action tokens that explain realized visual change.</p>
+          </div>
+          <div class="step">
+            <span>02</span>
+            <h3>Predict future dynamics</h3>
+            <p>The FDM conditions a pretrained video dynamics backbone on those latent actions, keeping the representation transition-relevant.</p>
+          </div>
+          <div class="step">
+            <span>03</span>
+            <h3>Remove nuisance factors</h3>
+            <p>KL discourages high-capacity visual encoding, while gradient reversal makes the latent action less predictive of embodiment identity.</p>
+          </div>
+          <div class="step">
+            <span>04</span>
+            <h3>Recover controllability</h3>
+            <p>A context-conditioned action-to-latent controller maps raw command sequences into the learned latent action space at inference time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section results" id="results">
+      <div class="section-heading">
+        <p class="section-label">Results</p>
+        <h2>SCAR improves transfer under low target data</h2>
+      </div>
+
+      <section class="experiment-block action-transfer" aria-labelledby="action-transfer-title">
+        <div class="section-heading compact">
+          <p class="section-label">Action Transfer Experiment</p>
+          <h2 id="action-transfer-title">Cross-Embodiment Action Transfer</h2>
+        </div>
+
+        <p class="experiment-copy">
+          We extract latent actions from a source embodiment trajectory and apply them to a target embodiment visual context. The goal is to transfer the source motion structure while preserving the target robot appearance. The demos compare raw latent actions, latent actions with KL regularization, and latent actions with both KL and GRL regularization.
+        </p>
+
+        <div class="section-heading compact video-heading">
+          <p class="section-label">Videos</p>
+          <h2>Video demos</h2>
+        </div>
+        <div class="video-grid video-matrix action-video-matrix" aria-label="Cross-embodiment action transfer videos">
+          <div class="matrix-corner" aria-hidden="true"></div>
+          <div class="matrix-head">Raw latent action</div>
+          <div class="matrix-head">with KL regularization</div>
+          <div class="matrix-head">with KL&amp;GRL regularization</div>
+
+          <div class="matrix-row-label">Example 01</div>
+          <figure class="matrix-cell" data-config="Raw latent action">
+            <video src="assets/videos/latent_exp03.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="with KL regularization">
+            <video src="assets/videos/kl_exp03.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="with KL&amp;GRL regularization">
+            <video src="assets/videos/grl_kl_exp03.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+
+          <div class="matrix-row-label">Example 02</div>
+          <figure class="matrix-cell" data-config="Raw latent action">
+            <video src="assets/videos/latent_exp04.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="with KL regularization">
+            <video src="assets/videos/kl_exp04.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="with KL&amp;GRL regularization">
+            <video src="assets/videos/grl_kl_exp04.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+
+          <div class="matrix-row-label">Example 03</div>
+          <figure class="matrix-cell" data-config="Raw latent action">
+            <video src="assets/videos/latent_exp07.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="with KL regularization">
+            <video src="assets/videos/kl_exp07.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="with KL&amp;GRL regularization">
+            <video src="assets/videos/grl_kl_exp07.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+        </div>
+      </section>
+
+      <section class="experiment-block few-shot" aria-labelledby="few-shot-title">
+        <div class="section-heading compact">
+          <p class="section-label">Few-Shot Target Embodiment World Model</p>
+          <h2 id="few-shot-title">Few-shot target embodiment world model</h2>
+        </div>
+
+        <p class="experiment-copy">
+          We train target-embodiment world models with limited target demonstrations and compare different action-conditioning interfaces. The demos show whether each interface can preserve target embodiment appearance while producing coherent future dynamics under the same visual context.
+        </p>
+
+        <div class="video-grid video-matrix world-video-matrix" aria-label="Few-shot target embodiment world model videos">
+          <div class="matrix-corner" aria-hidden="true"></div>
+          <div class="matrix-head">Raw ground-truth action</div>
+          <div class="matrix-head">Raw latent action</div>
+          <div class="matrix-head">SCAR (KL&amp;GRL)</div>
+          <div class="matrix-head">Controller recovery</div>
+
+          <div class="matrix-row-label">Example 01</div>
+          <figure class="matrix-cell" data-config="Raw ground-truth action">
+            <video src="assets/videos/world/target_share_gt_exp014.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="Raw latent action">
+            <video src="assets/videos/world/target_share_latent_exp014.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="SCAR (KL&amp;GRL)">
+            <video src="assets/videos/world/target_grl_kl_exp014.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="Controller recovery">
+            <video src="assets/videos/world/target_controller_exp014.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+
+          <div class="matrix-row-label">Example 02</div>
+          <figure class="matrix-cell" data-config="Raw ground-truth action">
+            <video src="assets/videos/world/target_share_gt_exp07.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="Raw latent action">
+            <video src="assets/videos/world/target_share_latent_exp07.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="SCAR (KL&amp;GRL)">
+            <video src="assets/videos/world/target_grl_kl_exp07.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+          <figure class="matrix-cell" data-config="Controller recovery">
+            <video src="assets/videos/world/target_controller_exp07.mp4" autoplay muted loop playsinline controls preload="metadata"></video>
+          </figure>
+        </div>
+
+      </section>
+    </section>
+
+    <section class="section two-column blog-note">
+      <div>
+        <p class="section-label">Project Note</p>
+        <h2>Why the learned action matters</h2>
+      </div>
+      <div class="prose">
+        <p>
+          A raw robot command is a local interface. The same command can mean different physical interventions across bodies, controllers, and scenes. SCAR instead asks the world model to condition on the part of a transition that explains controllable change.
+        </p>
+        <p>
+          This view makes embodiment a nuisance variable. The latent action must remain useful for prediction, but it should not reveal which robot produced it. The KL and GRL terms act as complementary pressure: one limits capacity, the other removes embodiment-discriminative directions.
+        </p>
+      </div>
+    </section>
+
+    <section class="section bibtex" id="bibtex">
+      <div class="section-heading compact">
+        <p class="section-label">Citation</p>
+        <h2>BibTeX</h2>
+      </div>
+      <pre><code id="bibtex-code">@article{liu2026scar,
+  title={SCAR: Self-Supervised Continuous Action Representation Learning},
+  author={Liu, Hongjia and Feng, Fan and Fu, Minghao and Wang, Xinyue and Lu, Haofei and Huang, Biwei},
+  journal={arXiv preprint arXiv:2605.16412},
+  year={2026}
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer" id="maintainer">
+    <span>Project page by Hongjia Liu.</span>
+    <span>Code release: coming soon.</span>
+  </footer>
+
+  <div class="toast" role="status" aria-live="polite" hidden>BibTeX copied</div>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      },
+      svg: {
+        fontCache: "global"
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="script.js?v=2026062103"></script>
+</body>
+</html>
